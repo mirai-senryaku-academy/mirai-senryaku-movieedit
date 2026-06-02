@@ -5,11 +5,25 @@ description: 整体プログラム用の動画自動編集。動画を渡すと�
 
 # 整体プログラム 動画編集スキル
 
-ユーザーの日本語の頼みを、このフォルダのスクリプト実行に翻訳する。まず必ず:
+ユーザーの日本語の頼みを、このスキルのスクリプト実行に翻訳する。
+
+**SKILL_DIR = この SKILL.md があるフォルダ**（`~/.claude/skills/seitai-video-edit/` か、cloneした場所）。
+実行は必ず SKILL_DIR に `cd` してから。パスはベタ書きせず、この SKILL.md の場所を使う:
 ```bash
-cd "/Users/gaku/CLAUDECODE-PROJECTS/seitai PRO/動画編集スキル"
+cd "<SKILL_DIR>"          # 例: cd ~/.claude/skills/seitai-video-edit
 ```
-入力動画はユーザーが渡したパス（このフォルダや `downloads/` に置かれることが多い）。YouTube URLを渡されたら `edit_video.py` がそのまま受けて自動DLする。
+入力動画はユーザーが渡したパス（SKILL_DIR や `downloads/` に置かれることが多い）。YouTube URLを渡されたら `edit_video.py` がそのまま受けて自動DLする。
+
+## 初回セットアップ（`.venv` が無ければ最初に1回だけ自動でやる）
+
+`SKILL_DIR/.venv` が存在しなければ、ユーザーに断ってから次を実行して環境を整える（以降は不要）:
+```bash
+command -v ffmpeg >/dev/null || brew install ffmpeg          # macOS。Linuxは apt 等
+command -v yt-dlp >/dev/null || brew install yt-dlp
+uv venv --python 3.12 .venv                                  # uvが無ければ python3 -m venv .venv
+.venv/bin/python -m pip install faster-whisper budoux Pillow # uv環境なら uv pip install ...
+```
+文字起こしモデル（medium 約1.5GB）は初回実行時に自動DLされる。fonts/ とbgm/ はリポジトリ同梱なので追加不要。
 
 ## プロンプト → コマンド 対応
 

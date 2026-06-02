@@ -31,14 +31,18 @@ After Effects / Premiere は不要。プログラミングの知識も不要。
 | `fonts/` | Noto Sans JP（OFLライセンス同梱） |
 | `bgm/` | CC0音源＋`CREDITS.md` |
 
-## 初回セットアップ（1回だけ）
+## 導入（clone後・1回だけ）
 
-Claude Code に「このフォルダで Python3.12 の venv を作って faster-whisper と budoux と Pillow を入れて」と頼むか、手動で:
 ```bash
-brew install ffmpeg yt-dlp
-uv venv --python 3.12 .venv
-.venv/bin/python -m pip install faster-whisper budoux Pillow   # or: uv pip install ...
+git clone <このリポジトリ> seitai-video-edit
+cd seitai-video-edit
+bash setup.sh            # ffmpeg/yt-dlp + venv(faster-whisper/budoux/Pillow) を用意
 ```
+Claude Code の「スキル」として使うには、このフォルダを `~/.claude/skills/` に置く（コピー or シンボリックリンク）:
+```bash
+ln -s "$(pwd)" ~/.claude/skills/seitai-video-edit
+```
+これで新しいセッションから「この動画にテロップ入れて」で起動する。文字起こしモデル（medium 約1.5GB）は初回実行時に自動DL。fonts/・bgm/ は同梱済み。
 
 ## 使い方（最短）
 
