@@ -35,7 +35,7 @@ uv venv --python 3.12 .venv                                  # uvが無ければ
 | ＋「扉絵も入れて」「章の区切りに見出し」 | 上記に `--titles` |
 | ＋「右上にサイドテロップ」「章名を出して」 | 上記に `--side` |
 | ＋「BGMつけて（おまかせ）」 | 上記に `--bgm auto` |
-| ＋「BGMは forest／cliff／walk で」 | `--bgm forest`（bgm/の名前で部分一致） |
+| ＋「BGMは pop／chill／piano／ambient で」 | `--bgm pop`（bgm/の名前で部分一致） |
 | ＋「BGMは自分の◯◯.mp3で」 | `--bgm "<パス>"` |
 | 「"軽擦"と"血行"を強調して」 | `edit_video.py "<動画>" --burn --emphasis 軽擦,血行`（他の付与も併記で再実行） |
 | 「1:20〜1:35 と 2:40〜2:50 を切って」 | `cut_ranges.py "<完成動画>" "<出力>" 1:20-1:35 2:40-2:50` |
@@ -44,7 +44,7 @@ uv venv --python 3.12 .venv                                  # uvが無ければ
 
 全部入りの例:
 ```bash
-.venv/bin/python edit_video.py "<動画>" --burn --titles --side --bgm forest
+.venv/bin/python edit_video.py "<動画>" --burn --titles --side --bgm pop
 ```
 出力の最終ファイルはログの「★完成:」行（`<名前>_final.mp4` 等）。
 

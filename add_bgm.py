@@ -43,7 +43,7 @@ def main():
     video = Path(a[0])
     bgm = resolve_bgm(a[1])
     out = Path(a[2]) if len(a) > 2 else video.with_name(video.stem + "_bgm.mp4")
-    vol = 0.28
+    vol = 0.18
     for f in flags:
         if f.startswith("--vol"):
             vol = float(f.split("=")[-1])

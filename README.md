@@ -51,7 +51,7 @@ ln -s "$(pwd)" ~/.claude/skills/seitai-video-edit
 ```
 全部入り:
 ```bash
-.venv/bin/python edit_video.py "撮った動画.mp4" --burn --titles --side --bgm forest
+.venv/bin/python edit_video.py "撮った動画.mp4" --burn --titles --side --bgm pop
 ```
 
 ## ライセンス
