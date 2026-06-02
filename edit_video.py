@@ -219,8 +219,9 @@ CIRCLED = {1: "①", 2: "②", 3: "③", 4: "④", 5: "⑤",
            6: "⑥", 7: "⑦", 8: "⑧", 9: "⑨"}
 
 
-def generate_chapters(words, trim_start, path: Path, op_title: str):
+def generate_chapters(words, trim_start, path: Path, op_title: str, rules=None):
     """トランスクリプトから章立て候補を自動生成（「N番目」等の合図を拾う）。ハイブリッドの土台。"""
+    rules = rules or []
     cmap = [(ch, w.start) for w in words for ch in w.word]
     full = "".join(c for c, _ in cmap)
     z2h = str.maketrans("１２３４５６７８９", "123456789")
@@ -239,6 +240,7 @@ def generate_chapters(words, trim_start, path: Path, op_title: str):
         t = max(0.0, cmap[m.start()][1] - trim_start)
         after = full[m.end():m.end() + 14].lstrip("、。 ")
         name = re.split(r"[、。\s]", after)[0][:8] if after else ""
+        name = apply_terms(name, rules)   # 用語辞書で章タイトルも補正（警察→軽擦 等）
         lines.append(f"{int(t//60)}:{int(t % 60):02d}    {CIRCLED.get(n, str(n)+'.')} {name}".rstrip())
     Path(path).write_text("\n".join(lines) + "\n", encoding="utf-8")
     return max(0, len(lines) - 2)
@@ -391,7 +393,7 @@ def main():
         if args.titles or args.side:
             ch_file = Path(args.chapters) if args.chapters else outdir / f"{stem}.章立て.txt"
             if not ch_file.exists():
-                n = generate_chapters(words, trim_start, ch_file, stem)
+                n = generate_chapters(words, trim_start, ch_file, stem, rules)
                 print(f"      章立てを自動生成: {ch_file}（{n}章。直したい場合は編集して再実行）",
                       flush=True)
             titled = outdir / f"{stem}_titled.mp4"
