@@ -1,0 +1,21 @@
+# Python仮想環境・キャッシュ
+.venv/
+.cache/
+__pycache__/
+*.pyc
+
+# 作業用一時フォルダ
+.titlecard/
+.cut/
+
+# テスト用にDLした動画（著作権物）・URL入力の保存先
+downloads/
+
+# 生成される動画・字幕・章立て（成果物。リポジトリには含めない）
+*.mp4
+*.srt
+*.章立て.txt
+_demo*.png
+
+# macOS
+.DS_Store
