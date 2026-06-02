@@ -253,7 +253,7 @@ def main():
            "-filter_complex",
            f"[0:v]scale={W}:{H}:flags=lanczos[bg];[bg][1:v]overlay=0:0:format=auto[v]",
            "-map", "[v]", "-map", "0:a?",
-           "-c:v", "libx264", "-crf", "18", "-preset", "medium", "-pix_fmt", "yuv420p",
+           "-c:v", "libx264", "-crf", "18", "-preset", "veryfast", "-pix_fmt", "yuv420p",
            "-c:a", "aac", "-b:a", "160k", str(out.resolve())]
     npop = sum(pop_flag)
     trim_note = f" / カット {start:.1f}s〜{'末尾' if end is None else f'{end:.1f}s'}" if (start > 0 or end is not None) else ""

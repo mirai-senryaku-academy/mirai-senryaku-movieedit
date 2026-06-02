@@ -240,6 +240,7 @@ def generate_chapters(words, trim_start, path: Path, op_title: str, rules=None):
         t = max(0.0, cmap[m.start()][1] - trim_start)
         after = full[m.end():m.end() + 14].lstrip("、。 ")
         name = re.split(r"[、。\s]", after)[0][:8] if after else ""
+        name = re.sub(r"(ですね|でしょう|ます|です|だね|だよ|だ|ね)$", "", name)  # 語尾を落とす
         name = apply_terms(name, rules)   # 用語辞書で章タイトルも補正（警察→軽擦 等）
         lines.append(f"{int(t//60)}:{int(t % 60):02d}    {CIRCLED.get(n, str(n)+'.')} {name}".rstrip())
     Path(path).write_text("\n".join(lines) + "\n", encoding="utf-8")

@@ -123,7 +123,7 @@ def render_side_label(text, W, H, out):
 
 def enc_common(W, H):
     return ["-r", str(FPS), "-s", f"{W}x{H}", "-c:v", "libx264", "-crf", "18",
-            "-preset", "medium", "-pix_fmt", "yuv420p",
+            "-preset", "veryfast", "-pix_fmt", "yuv420p",
             "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-ac", "2"]
 
 
@@ -172,7 +172,7 @@ def assemble_xfade(pieces, out, dur, trans):
     fc = ";".join(vfil + afil)
     cmd = ["ffmpeg", "-y", "-loglevel", "error", *inputs,
            "-filter_complex", fc, "-map", f"[{vlab}]", "-map", f"[{alab}]",
-           "-c:v", "libx264", "-crf", "18", "-preset", "medium", "-pix_fmt", "yuv420p",
+           "-c:v", "libx264", "-crf", "18", "-preset", "veryfast", "-pix_fmt", "yuv420p",
            "-c:a", "aac", "-b:a", "160k", str(out.resolve())]
     subprocess.run(cmd, check=True)
 
@@ -231,7 +231,7 @@ def side_only(video, secs, out, W, H, work):
     fc = ";".join(parts)
     cmd = ["ffmpeg", "-y", "-loglevel", "error", *inputs,
            "-filter_complex", fc, "-map", f"[{prev_lab}]", "-map", "0:a?",
-           "-c:v", "libx264", "-crf", "18", "-preset", "medium", "-pix_fmt", "yuv420p",
+           "-c:v", "libx264", "-crf", "18", "-preset", "veryfast", "-pix_fmt", "yuv420p",
            "-c:a", "aac", "-b:a", "160k", str(out.resolve())]
     subprocess.run(cmd, check=True)
 
