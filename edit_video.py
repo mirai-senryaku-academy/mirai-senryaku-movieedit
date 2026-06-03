@@ -275,7 +275,10 @@ def burn_in(video: Path, srt: Path, out: Path, font_size: int, font: str):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("video", help="入力動画ファイル")
-    ap.add_argument("--model", default="medium", help="whisperモデル (small/medium/large-v3)")
+    ap.add_argument("--quality", default="medium", choices=["low", "medium", "high"],
+                    help="クオリティ: low(速い/誤字でやすい/画質低) / medium(既定) / high(遅い/高精度/高画質)")
+    ap.add_argument("--model", default=None,
+                    help="whisperモデル (small/medium/large-v3)。指定すると --quality のモデルを上書き")
     ap.add_argument("--lang", default="ja")
     ap.add_argument("--vad", action="store_true", help="無音区間カット(Silero VAD)を有効化。既定OFF")
     ap.add_argument("--max-chars", type=int, default=16, help="1行の最大文字数")
@@ -311,6 +314,20 @@ def main():
     ap.add_argument("--chapters", default=None, help="章立てファイルを明示指定")
     args = ap.parse_args()
 
+    # クオリティ・ティア: 文字起こしモデル＋出力解像度＋画質(crf/preset)をまとめて決める。
+    # height=0 は「元の高さと1080の大きい方」（burn_anim.py側の自動）。
+    QUALITY = {
+        "low":    {"model": "small",    "height": 720, "crf": 26, "preset": "veryfast"},
+        "medium": {"model": "medium",   "height": 0,   "crf": 18, "preset": "veryfast"},
+        "high":   {"model": "large-v3", "height": 0,   "crf": 16, "preset": "slow"},
+    }
+    q = QUALITY[args.quality]
+    model = args.model or q["model"]          # --model 明示があれば上書き
+    out_height, out_crf, out_preset = q["height"], q["crf"], q["preset"]
+    print(f"[0/4] クオリティ={args.quality} "
+          f"(model={model} / {('元解像度' if out_height == 0 else str(out_height)+'p')} / crf{out_crf})",
+          flush=True)
+
     script_dir = Path(__file__).resolve().parent
     video = download_if_url(args.video, script_dir / "downloads")
     if not video.exists():
@@ -321,7 +338,7 @@ def main():
 
     rules = load_term_dict(Path(args.terms))
     words, full_text, vid_dur = transcribe_cached(
-        video, args.model, args.lang, args.vad, args.refresh)
+        video, model, args.lang, args.vad, args.refresh)
 
     print("[2/4] 用語補正 + [3/4] BudouX改行 ...", flush=True)
     captions = build_captions(words, args.max_chars, args.max_lines, rules)
@@ -379,7 +396,8 @@ def main():
             cmd = [sys.executable, str(script), str(video),
                    str(burn_srt), str(out_mp4),
                    f"--style={args.style}", f"--pop={args.pop}", f"--hl={args.hl}",
-                   f"--start={trim_start}"]
+                   f"--start={trim_start}",
+                   f"--height={out_height}", f"--crf={out_crf}", f"--preset={out_preset}"]
             if args.emphasis:
                 cmd.append(f"--kw={args.emphasis}")
             if trim_end is not None:

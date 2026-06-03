@@ -180,9 +180,15 @@ def main():
     # テロップは別レイヤーなので出力を720p以上に上げて文字をくっきり描く
     # （元映像は引き伸ばしでボケるが、文字はシャープになる）
     target_h = 0
+    crf = 18
+    preset = "veryfast"
     for f in flags:
         if f.startswith("--height"):
             target_h = int(f.split("=")[-1])
+        if f.startswith("--crf"):
+            crf = int(f.split("=")[-1])
+        if f.startswith("--preset"):
+            preset = f.split("=")[-1]
     if target_h == 0:
         target_h = max(sh, 1080)
     H = target_h
@@ -253,12 +259,12 @@ def main():
            "-filter_complex",
            f"[0:v]scale={W}:{H}:flags=lanczos[bg];[bg][1:v]overlay=0:0:format=auto[v]",
            "-map", "[v]", "-map", "0:a?",
-           "-c:v", "libx264", "-crf", "18", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+           "-c:v", "libx264", "-crf", str(crf), "-preset", preset, "-pix_fmt", "yuv420p",
            "-c:a", "aac", "-b:a", "160k", str(out.resolve())]
     npop = sum(pop_flag)
     trim_note = f" / カット {start:.1f}s〜{'末尾' if end is None else f'{end:.1f}s'}" if (start > 0 or end is not None) else ""
     print(f"出力 {W}x{H}(元{sw}x{sh}) {fps:.2f}fps {nframes}フレーム / テロップ{len(caps)}枚 / "
-          f"スタイル={style_name} / ポップ={pop_mode}({npop}枚) / libx264 crf18{trim_note}", flush=True)
+          f"スタイル={style_name} / ポップ={pop_mode}({npop}枚) / libx264 crf{crf} {preset}{trim_note}", flush=True)
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
 
     ci = 0
