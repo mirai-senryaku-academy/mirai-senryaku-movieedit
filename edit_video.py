@@ -18,6 +18,16 @@ import sys
 from collections import namedtuple
 from pathlib import Path
 
+# 会社のSSL検査(プロキシ復号)下だと、faster-whisperのモデルDLが証明書検証で
+# 弾かれる（httpx/httpcore のSSLError, Windowsの 0x8a15005e と同根）。truststore を
+# 注入してOSの証明書ストア(=ブラウザが信頼している会社ルートCAを含む)で検証させると通る。
+# 入っていなければ黙ってスキップ（Mac/Linuxでも無害）。
+try:
+    import truststore
+    truststore.inject_into_ssl()
+except Exception:
+    pass
+
 import budoux
 from faster_whisper import WhisperModel
 

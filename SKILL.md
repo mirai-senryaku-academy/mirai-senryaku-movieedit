@@ -35,25 +35,39 @@ winget install --id Gyan.FFmpeg -e --source winget --accept-source-agreements --
 winget install --id yt-dlp.yt-dlp -e --source winget --accept-source-agreements --accept-package-agreements
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
-.\.venv\Scripts\python.exe -m pip install faster-whisper budoux Pillow yt-dlp
+.\.venv\Scripts\python.exe -m pip install faster-whisper budoux Pillow yt-dlp truststore
 ```
 以降このスキルの python は **`.venv\Scripts\python.exe`**（macの `.venv/bin/python` の読み替え）。winget で入れた ffmpeg は新しいシェルで PATH が通る（通らなければシェルを開き直す）。
+
+**会社PC（SSL検査あり）でモデルDLが証明書エラーで落ちる場合**: `httpx`/`httpcore` の SSLError や「サーバー証明書が一致しません(0x8a15005e)」が出るのは、社内プロキシが通信を復号していて Python が会社のルート証明書を信頼できないため。`truststore`（上のpipに含めた）を入れておけば、`edit_video.py` が起動時に `truststore.inject_into_ssl()` を呼び、**OSの証明書ストア（ブラウザが信頼している会社ルートCAを含む）で検証**するので通る。`SSL_CERT_FILE` を certifi に向けても直らない（certifiに会社ルートが無いから）。truststore で解決しないほどガチガチなら、別PC（検査なし回線）でモデルをDL→ `~/.cache/huggingface/hub/` を丸ごとコピーする（後述の手動配置）。
 
 > Windowsで実行コマンドを組むときは、SKILL.md内の `.venv/bin/python` をすべて `.venv\Scripts\python.exe` に読み替える。スクリプト本体(`edit_video.py` 等)はOS非依存でそのまま動く。
 
 文字起こしモデル（medium 約1.5GB / small 約0.5GB）は初回実行時に自動DLされる。fonts/ とbgm/ はリポジトリ同梱なので追加不要。
 
-## 走り出す前に必ずクオリティを選ばせる（毎回）
+## 走り出す前に仕様を確認する（要素＋クオリティ／毎回）
 
-`edit_video.py` を実行する前に、**毎回かならず**ユーザーに低／中／高のどれかを選ばせる（`AskUserQuestion` で3択）。ユーザーが最初の依頼文で「高クオリティで」「速くていい＝低で」等とすでに指定している場合のみ、確認を省いてそのまま使う。選択結果を `--quality` で渡す。
+`edit_video.py` を実行する前に、**毎回かならず**ユーザーに確認を取る。`AskUserQuestion` に下の2問をまとめて出す（要素は複数選択、クオリティは単一選択）。**ただし、ユーザーが最初の依頼文ですでに指定している項目は聞き直さない**（例: 「テロップと扉絵とサイドテロップとBGM、高クオリティで」と来たら何も聞かずそのまま実行。「扉絵だけ要る？」のように一部だけ曖昧なら、曖昧な分だけ聞く）。
 
+**Q1. どの要素を入れる？（複数選択）** ＝ ベースのテロップ（字幕焼き込み）は常に入る。追加で:
+| 選択肢 | 付けるオプション |
+|---|---|
+| 扉絵（章の区切りに見出し） | `--titles` |
+| サイドテロップ（右上に章名を常駐） | `--side` |
+| BGM（おまかせ） | `--bgm auto`（種類指定があれば `--bgm pop` 等／持ち込みは `--bgm "<パス>"`） |
+
+（強調語 `--emphasis` や区間カットは、依頼文に出てきたときだけ付ける。毎回は聞かない。）
+
+**Q2. クオリティは？（単一選択）**
 | 選択肢 | 渡す | 中身 | 体感 |
 |---|---|---|---|
 | **低クオリティ**（速い） | `--quality low` | model=small / 720p / crf26 | 速い。誤字が出やすく画質も落ちる。下見・確認用 |
 | **中クオリティ**（標準・既定） | `--quality medium` | model=medium / 元解像度or1080p / crf18 | バランス。通常はこれ |
 | **高クオリティ**（遅い） | `--quality high` | model=large-v3 / 元解像度or1080p / crf16 / preset slow | 誤変換が激減し画質も最良。時間がかかる |
 
-注意: この環境はCPUのみで、文字起こしが一番のボトルネック。中・高は数分〜十数分かかることがある。先にユーザーへ「中・高は時間がかかる」と一言添えてから選ばせる。VADを効かせると無音・非発話区間で文字起こしが暴走する事故を防げて速くなるので、基本は `--vad` を併用する。
+確認が取れたら、選ばれた要素フラグ＋ `--quality` ＋ `--vad` ＋ `--burn` を組んで一発で実行する。
+
+注意: この環境はCPUのみで、文字起こしが一番のボトルネック。中・高は数分〜十数分（遅いマシンでは動画の長さ以上）かかることがある。先にユーザーへ「中・高は時間がかかる」と一言添えてから選ばせる。VADを効かせると無音・非発話区間で文字起こしが暴走する事故を防げて速くなるので、基本は `--vad` を併用する。
 
 ## プロンプト → コマンド 対応
 
