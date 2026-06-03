@@ -47,8 +47,11 @@ def transcribe_cached(video: Path, model: str, lang: str, vad: bool, refresh: bo
 
     print(f"[1/4] 文字起こし開始 model={model} vad={'ON' if vad else 'OFF'} ...", flush=True)
     model_obj = WhisperModel(model, device="cpu", compute_type="int8")
+    # condition_on_previous_text=False: 前文脈を渡さないことで「同じ語を延々吐く」
+    # 繰り返しループ(CPUが落ちて事実上ストール)を防ぐ。喋りっぱなしの長尺で特に効く。
     segments, info = model_obj.transcribe(
-        str(video), language=lang, word_timestamps=True, vad_filter=vad)
+        str(video), language=lang, word_timestamps=True, vad_filter=vad,
+        condition_on_previous_text=False)
     words, seg_texts = [], []
     for seg in segments:
         seg_texts.append(seg.text)

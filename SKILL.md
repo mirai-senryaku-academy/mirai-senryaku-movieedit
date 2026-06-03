@@ -16,14 +16,32 @@ cd "<SKILL_DIR>"          # 例: cd ~/.claude/skills/seitai-video-edit
 
 ## 初回セットアップ（`.venv` が無ければ最初に1回だけ自動でやる）
 
-`SKILL_DIR/.venv` が存在しなければ、ユーザーに断ってから次を実行して環境を整える（以降は不要）:
+`SKILL_DIR/.venv` が存在しなければ、ユーザーに断ってから環境を整える（以降は不要）。**OSで手順が違う。**
+
+### macOS / Linux
 ```bash
 command -v ffmpeg >/dev/null || brew install ffmpeg          # macOS。Linuxは apt 等
 command -v yt-dlp >/dev/null || brew install yt-dlp
 uv venv --python 3.12 .venv                                  # uvが無ければ python3 -m venv .venv
 .venv/bin/python -m pip install faster-whisper budoux Pillow # uv環境なら uv pip install ...
 ```
-文字起こしモデル（medium 約1.5GB）は初回実行時に自動DLされる。fonts/ とbgm/ はリポジトリ同梱なので追加不要。
+以降このスキルの python は **`.venv/bin/python`**。
+
+### Windows（PowerShell）
+```powershell
+# ffmpeg: winget の既定だと msstore ソースが証明書エラー(0x8a15005e)で落ちる。
+# 必ず --source winget を明示する。
+winget install --id Gyan.FFmpeg -e --source winget --accept-source-agreements --accept-package-agreements
+winget install --id yt-dlp.yt-dlp -e --source winget --accept-source-agreements --accept-package-agreements
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install faster-whisper budoux Pillow yt-dlp
+```
+以降このスキルの python は **`.venv\Scripts\python.exe`**（macの `.venv/bin/python` の読み替え）。winget で入れた ffmpeg は新しいシェルで PATH が通る（通らなければシェルを開き直す）。
+
+> Windowsで実行コマンドを組むときは、SKILL.md内の `.venv/bin/python` をすべて `.venv\Scripts\python.exe` に読み替える。スクリプト本体(`edit_video.py` 等)はOS非依存でそのまま動く。
+
+文字起こしモデル（medium 約1.5GB / small 約0.5GB）は初回実行時に自動DLされる。fonts/ とbgm/ はリポジトリ同梱なので追加不要。
 
 ## 走り出す前に必ずクオリティを選ばせる（毎回）
 
