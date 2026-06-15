@@ -44,15 +44,22 @@ def main():
     bgm = resolve_bgm(a[1])
     out = Path(a[2]) if len(a) > 2 else video.with_name(video.stem + "_bgm.mp4")
     vol = 0.18
+    voice = -16.0  # ナレーション音声のラウドネス正規化ターゲット(LUFS)。--voice off で無効。
     for f in flags:
         if f.startswith("--vol"):
             vol = float(f.split("=")[-1])
+        if f.startswith("--voice"):
+            v = f.split("=")[-1]
+            voice = None if v in ("off", "none", "--voice") else float(v)
 
     dur = probe_dur(video)
     fade_st = max(0.0, dur - 2.0)
+    # 元音声(ナレーション)を loudnorm でラウドネス正規化してから分岐＋ミックス
+    pre = (f"[0:a]loudnorm=I={voice}:TP=-1.5:LRA=11[nv];[nv]asplit=2[v1][v2];"
+           if voice is not None else "[0:a]asplit=2[v1][v2];")
     fc = (
+        pre +
         f"[1:a]volume={vol},afade=t=in:st=0:d=1.0[bgmv];"
-        f"[0:a]asplit=2[v1][v2];"
         f"[bgmv][v2]sidechaincompress=threshold=0.04:ratio=8:attack=20:release=400[duck];"
         f"[v1][duck]amix=inputs=2:normalize=0:duration=first[mx];"
         f"[mx]afade=t=out:st={fade_st:.2f}:d=2[aout]"
@@ -64,7 +71,8 @@ def main():
            "-map", "0:v", "-map", "[aout]",
            "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-shortest",
            str(out.resolve())]
-    print(f"BGM={bgm.name} vol={vol} ダッキングON ループ＋終端フェード / 動画{dur:.0f}s", flush=True)
+    vmsg = f"声正規化I={voice}LUFS" if voice is not None else "声正規化OFF"
+    print(f"BGM={bgm.name} vol={vol} {vmsg} ダッキングON ループ＋終端フェード / 動画{dur:.0f}s", flush=True)
     r = subprocess.run(cmd)
     if r.returncode != 0:
         sys.exit("BGMミックス失敗")

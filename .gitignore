@@ -17,5 +17,8 @@ downloads/
 *.章立て.txt
 _demo*.png
 
+# 候補から外したBGM（声混入など不良音源の退避先。リポジトリには含めない）
+bgm/_excluded/
+
 # macOS
 .DS_Store
